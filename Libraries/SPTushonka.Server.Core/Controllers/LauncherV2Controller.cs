@@ -67,7 +67,9 @@ public class LauncherV2Controller(
     {
         var sessionId = GetSessionId(info);
 
-        if (sessionId.IsEmpty || !launcherAccounts.Owns(info.LauncherToken, sessionId.ToString())) return false;
+        if (sessionId.IsEmpty) return false;
+        if (!coreConfig.Features.RequireLauncherAccount) return true;
+        if (!launcherAccounts.Owns(info.LauncherToken, sessionId.ToString())) return false;
         return true;
     }
 
@@ -78,8 +80,11 @@ public class LauncherV2Controller(
     /// <returns></returns>
     public async Task<bool> Register(RegisterData info)
     {
-        var account = launcherAccounts.Authenticate(info.LauncherToken);
-        if (account is null || !string.Equals(info.Edition, account.EditionAllowed, StringComparison.OrdinalIgnoreCase)) return false;
+        if (coreConfig.Features.RequireLauncherAccount)
+        {
+            var account = launcherAccounts.Authenticate(info.LauncherToken);
+            if (account is null || !string.Equals(info.Edition, account.EditionAllowed, StringComparison.OrdinalIgnoreCase)) return false;
+        }
         if (IsEditionBlacklisted(info.Edition))
         {
             return false;
@@ -95,7 +100,7 @@ public class LauncherV2Controller(
 
         if (string.IsNullOrWhiteSpace(info.Username)) return false;
         var profileId = await CreateAccount(info);
-        if (!launcherAccounts.AddProfile(info.LauncherToken, profileId.ToString()))
+        if (coreConfig.Features.RequireLauncherAccount && !launcherAccounts.AddProfile(info.LauncherToken, profileId.ToString()))
         {
             saveServer.RemoveProfile(profileId);
             return false;
@@ -113,9 +118,9 @@ public class LauncherV2Controller(
         var sessionId = GetSessionId(info);
 
         if (!Login(info)) return false;
-        if (!launcherAccounts.Owns(info.LauncherToken, sessionId.ToString())) return false;
+        if (coreConfig.Features.RequireLauncherAccount && !launcherAccounts.Owns(info.LauncherToken, sessionId.ToString())) return false;
         if (!saveServer.RemoveProfile(sessionId)) return false;
-        return launcherAccounts.RemoveProfile(info.LauncherToken, sessionId.ToString());
+        return !coreConfig.Features.RequireLauncherAccount || launcherAccounts.RemoveProfile(info.LauncherToken, sessionId.ToString());
     }
 
     /// <summary>
@@ -184,7 +189,7 @@ public class LauncherV2Controller(
     }
 
     // Per-game-profile passwords are superseded by launcher account sessions.
-    public bool RequirePasswords() => false;
+    public bool RequireLauncherAccount() => coreConfig.Features.RequireLauncherAccount;
 
     protected bool IsEditionBlacklisted(string? edition)
     {
@@ -217,7 +222,7 @@ public class LauncherV2Controller(
             return false;
         }
 
-        var sessionIsValid = Login(info) && string.Equals(info.Edition, launcherAccounts.Authenticate(info.LauncherToken)?.EditionAllowed, StringComparison.OrdinalIgnoreCase);
+        var sessionIsValid = Login(info) && (!coreConfig.Features.RequireLauncherAccount || string.Equals(info.Edition, launcherAccounts.Authenticate(info.LauncherToken)?.EditionAllowed, StringComparison.OrdinalIgnoreCase));
 
         if (!sessionIsValid)
         {
