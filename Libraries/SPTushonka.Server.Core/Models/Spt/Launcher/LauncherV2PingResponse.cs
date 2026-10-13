@@ -6,3 +6,8 @@ public class LauncherV2PingResponse : IRequestData
 {
     public required string Response { get; set; }
 }
+
+public class LauncherV2AuthSettingsResponse : IRequestData
+{
+    public bool Response { get; set; }
+}
