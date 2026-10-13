@@ -19,6 +19,7 @@ public class LauncherV2StaticRouter(LauncherV2Callbacks launcherV2Callbacks, Jso
             new RouteAction<LauncherAccountRequest>("/launcher/v2/account/logout", async (_, info, _, _, _) => await launcherV2Callbacks.AccountLogout(info)),
             new RouteAction<EmptyRequestData>("/launcher/v2/ping", async (_, _, _, _, _) => await launcherV2Callbacks.Ping()),
             new RouteAction<EmptyRequestData>("/launcher/v2/launcher-account-required", async (_, _, _, _, _) => await launcherV2Callbacks.PasswordRequired()),
+            new RouteAction<LauncherAccountRequest>("/launcher/v2/account/types", async (_, info, _, _, _) => await launcherV2Callbacks.AccountTypes(info)),
             new RouteAction<EmptyRequestData>("/launcher/v2/types", async (_, _, _, _, _) => await launcherV2Callbacks.Types()),
             new RouteAction<LoginRequestData>("/launcher/v2/login", async (_, info, _, _, _) => await launcherV2Callbacks.Login(info)),
             new RouteAction<RegisterData>("/launcher/v2/register", async (_, info, _, _, _) => await launcherV2Callbacks.Register(info)),
