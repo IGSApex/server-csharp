@@ -29,7 +29,8 @@ public class LauncherV2StaticRouter(LauncherV2Callbacks launcherV2Callbacks, Jso
             ),
             new RouteAction<EmptyRequestData>("/launcher/v2/mods", async (_, _, _, _, _) => await launcherV2Callbacks.Mods()),
             new RouteAction<EmptyRequestData>("/launcher/v2/mod-pages", async (_, _, _, _, _) => await launcherV2Callbacks.ModPages()),
-            new RouteAction<LauncherAccountRequest>("/launcher/v2/profiles", async (_, info, _, _, _) => await launcherV2Callbacks.Profiles(info)),
+            new RouteAction<EmptyRequestData>("/launcher/v2/profiles", async (_, _, _, _, _) => await launcherV2Callbacks.LocalProfiles()),
+            new RouteAction<LauncherAccountRequest>("/launcher/v2/account/profiles", async (_, info, _, _, _) => await launcherV2Callbacks.Profiles(info)),
             new RouteAction<LoginRequestData>("/launcher/v2/profile", async (_, info, _, _, _) => await launcherV2Callbacks.Profile(info)),
             new RouteAction<RegisterData>("/launcher/v2/wipe", async (_, info, _, _, _) => await launcherV2Callbacks.Wipe(info)),
         ]
