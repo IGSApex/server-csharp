@@ -68,13 +68,6 @@ public class LauncherV2Callbacks(
         return new ValueTask<string>(httpResponseUtil.NoBody(new LauncherV2TypesResponse { Response = launcherV2Controller.Types() }));
     }
 
-    public ValueTask<string> AccountTypes(LauncherAccountRequest request)
-    {
-        var account = launcherAccounts.Authenticate(request.Token);
-        var types = account is null ? new Dictionary<string, string>() : launcherV2Controller.Types(account.EditionAllowed);
-        return new ValueTask<string>(httpResponseUtil.NoBody(new LauncherV2TypesResponse { Response = types }));
-    }
-
     public ValueTask<string> Login(LoginRequestData info)
     {
         return new ValueTask<string>(httpResponseUtil.NoBody(new LauncherV2LoginResponse { Response = launcherV2Controller.Login(info) }));
