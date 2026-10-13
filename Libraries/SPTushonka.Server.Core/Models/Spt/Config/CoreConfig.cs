@@ -198,8 +198,8 @@ public record GameFixes
 
 public record ServerFeatures
 {
-    [JsonPropertyName("fikaFeatures")]
-    public FikaFeatures? FikaFeatures { get; set; }
+    [JsonPropertyName("requireLauncherAccount")]
+    public bool RequireLauncherAccount { get; set; } = false;
 
     [JsonPropertyName("compressProfile")]
     public bool CompressProfile { get; set; }
@@ -256,8 +256,3 @@ public record CommandoFeatures
     public bool GiveCommandEnabled { get; set; }
 }
 
-public record FikaFeatures
-{
-    [JsonPropertyName("requirePasswords")]
-    public bool RequirePasswords { get; set; } = false;
-}
