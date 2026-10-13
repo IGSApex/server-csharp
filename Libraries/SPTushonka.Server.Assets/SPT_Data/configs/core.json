@@ -297,10 +297,12 @@
   },
   "features": {
     "fikaFeatures": {
-      "requirePasswords": false,
-      "useDiscordForGameEditions": false,
+      "requirePasswords": false
+    },
+    "discordFeatures": {
       "discordBotToken": "your_discord_bot_token",
       "discordGuildID": "your_discord_guild_id",
+      "useDiscordForGameEditions": false,
       "discordEditionRoles": {
         "Standard": "role_id or blank to allow everyone",
         "Left Behind": "role_id",
