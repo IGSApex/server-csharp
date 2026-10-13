@@ -175,7 +175,21 @@ public class LauncherV2Controller(
 
     protected bool IsEditionBlacklisted(string? edition)
     {
-        return edition is not null && coreConfig.Features.CreateNewProfileTypesBlacklist.Contains(edition, StringComparer.OrdinalIgnoreCase);
+        if (edition is null)
+        {
+            return false;
+        }
+
+        // Preserve the existing SPT blacklist and additionally hide editions disabled in core.json.
+        if (coreConfig.Features.CreateNewProfileTypesBlacklist.Contains(edition, StringComparer.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var configuredEditions = coreConfig.Features.ProfileFeatures?.Profiles;
+        return configuredEditions is not null
+            && configuredEditions.Any(entry =>
+                string.Equals(entry.Key, edition, StringComparison.OrdinalIgnoreCase) && !entry.Value);
     }
 
     protected MongoId GetSessionId(LoginRequestData info)
