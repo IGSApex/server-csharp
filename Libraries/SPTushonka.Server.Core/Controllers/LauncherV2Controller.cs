@@ -66,7 +66,10 @@ public class LauncherV2Controller(
     {
         var sessionId = GetSessionId(info);
 
-        return !sessionId.IsEmpty && (saveServer.GetProfile(sessionId).ProfileInfo?.Password is not { Length: > 0 } storedHash || Passwords.Verify(storedHash, info.Password));
+        if (sessionId.IsEmpty) return false;
+        if (!RequirePasswords()) return true;
+        return saveServer.GetProfile(sessionId).ProfileInfo?.Password is { Length: > 0 } storedHash
+            && Passwords.Verify(storedHash, info.Password);
     }
 
     /// <summary>
@@ -90,7 +93,7 @@ public class LauncherV2Controller(
         }
 
         if (string.IsNullOrWhiteSpace(info.Username)) return false;
-        if (!string.IsNullOrEmpty(info.Password) && !Passwords.IsValid(info.Password)) return false;
+        if (RequirePasswords() && !Passwords.IsValid(info.Password)) return false;
         await CreateAccount(info);
         return true;
     }
@@ -104,7 +107,7 @@ public class LauncherV2Controller(
     {
         var sessionId = GetSessionId(info);
 
-        if (sessionId.IsEmpty || (saveServer.GetProfile(sessionId).ProfileInfo?.Password is { Length: > 0 } storedHash && !Passwords.Verify(storedHash, info.Password))) return false;
+        if (!Login(info)) return false;
         return saveServer.RemoveProfile(sessionId);
     }
 
@@ -160,7 +163,7 @@ public class LauncherV2Controller(
             ScavengerId = scavId,
             Aid = hashUtil.GenerateAccountId(),
             Username = info.Username,
-            Password = !string.IsNullOrEmpty(info.Password) ? Passwords.Hash(info.Password) : null,
+            Password = RequirePasswords() ? Passwords.Hash(info.Password!) : null,
             IsWiped = true,
             Edition = info.Edition,
         };
@@ -173,23 +176,19 @@ public class LauncherV2Controller(
         return profileId;
     }
 
+    // Fika-specific settings are active only when both server plugin assemblies are installed.
+    public bool RequirePasswords()
+    {
+        var fikaDirectory = Path.Combine(Environment.CurrentDirectory, "user", "mods", "fika-server");
+        return File.Exists(Path.Combine(fikaDirectory, "FikaServer.dll"))
+            && File.Exists(Path.Combine(fikaDirectory, "FikaShared.dll"))
+            && coreConfig.Features.FikaFeatures?.RequirePasswords == true;
+    }
+
     protected bool IsEditionBlacklisted(string? edition)
     {
-        if (edition is null)
-        {
-            return false;
-        }
-
-        // Preserve the existing SPT blacklist and additionally hide editions disabled in core.json.
-        if (coreConfig.Features.CreateNewProfileTypesBlacklist.Contains(edition, StringComparer.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        var configuredEditions = coreConfig.Features.ProfileFeatures?.Profiles;
-        return configuredEditions is not null
-            && configuredEditions.Any(entry =>
-                string.Equals(entry.Key, edition, StringComparison.OrdinalIgnoreCase) && !entry.Value);
+        return edition is not null
+            && coreConfig.Features.CreateNewProfileTypesBlacklist.Contains(edition, StringComparer.OrdinalIgnoreCase);
     }
 
     protected MongoId GetSessionId(LoginRequestData info)
