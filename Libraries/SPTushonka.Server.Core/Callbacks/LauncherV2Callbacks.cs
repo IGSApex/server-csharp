@@ -10,9 +10,48 @@ namespace SPTarkov.Server.Core.Callbacks;
 public class LauncherV2Callbacks(
     HttpResponseUtil httpResponseUtil,
     LauncherV2Controller launcherV2Controller,
-    ProfileController profileController
+    ProfileController profileController,
+    LauncherAccountStore launcherAccounts
 )
 {
+    public ValueTask<string> AccountRegister(LauncherAccountRequest request)
+    {
+        var success = launcherAccounts.Register(request.Username, request.Password);
+        return new ValueTask<string>(httpResponseUtil.NoBody(new LauncherAccountResponse { Response = success }));
+    }
+
+    public ValueTask<string> AccountLogin(LauncherAccountRequest request)
+    {
+        var session = launcherAccounts.Login(request.Username, request.Password);
+        return new ValueTask<string>(httpResponseUtil.NoBody(new LauncherAccountResponse
+        {
+            Response = session is not null,
+            Token = session?.Token,
+            Username = session?.Username,
+            EditionAllowed = session?.EditionAllowed,
+            SavedProfiles = session?.SavedProfiles ?? []
+        }));
+    }
+
+    public ValueTask<string> AccountSession(LauncherAccountRequest request)
+    {
+        var session = launcherAccounts.Authenticate(request.Token);
+        return new ValueTask<string>(httpResponseUtil.NoBody(new LauncherAccountResponse
+        {
+            Response = session is not null,
+            Token = session?.Token,
+            Username = session?.Username,
+            EditionAllowed = session?.EditionAllowed,
+            SavedProfiles = session?.SavedProfiles ?? []
+        }));
+    }
+
+    public ValueTask<string> AccountLogout(LauncherAccountRequest request)
+    {
+        launcherAccounts.Logout(request.Token);
+        return new ValueTask<string>(httpResponseUtil.NoBody(new LauncherAccountResponse { Response = true }));
+    }
+
     public ValueTask<string> Ping()
     {
         return new ValueTask<string>(httpResponseUtil.NoBody(new LauncherV2PingResponse { Response = launcherV2Controller.Ping() }));
@@ -40,7 +79,7 @@ public class LauncherV2Callbacks(
             new LauncherV2RegisterResponse
             {
                 Response = await launcherV2Controller.Register(info),
-                Profiles = profileController.GetMiniProfiles(),
+                Profiles = profileController.GetMiniProfiles().Where(p => launcherAccounts.Owns(info.LauncherToken, p.ProfileId.ToString())).ToList(),
             }
         );
     }
@@ -77,10 +116,10 @@ public class LauncherV2Callbacks(
         );
     }
 
-    public ValueTask<string> Profiles()
+    public ValueTask<string> Profiles(LauncherAccountRequest request)
     {
         return new ValueTask<string>(
-            httpResponseUtil.NoBody(new LauncherV2ProfilesResponse { Response = profileController.GetMiniProfiles() })
+            httpResponseUtil.NoBody(new LauncherV2ProfilesResponse { Response = profileController.GetMiniProfiles().Where(p => launcherAccounts.Owns(request.Token, p.ProfileId.ToString())).ToList() })
         );
     }
 
