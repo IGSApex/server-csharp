@@ -299,16 +299,17 @@
     "fikaFeatures": {
       "requirePasswords": false
     },
+    "enableDiscord": true,
     "discordFeatures": {
       "discordBotToken": "your_discord_bot_token",
-      "discordGuildID": "your_discord_guild_id",
+      "discordGuildID": "378233544197013504",
       "useDiscordForGameEditions": false,
       "discordEditionRoles": {
-        "Standard": "role_id or blank to allow everyone",
-        "Left Behind": "role_id",
-        "Prepare To Escape": "role_id",
-        "Edge Of Darkness": "role_id",
-        "Unheard": "role_id"
+        "Standard": "1559677921608867880",
+        "Left Behind": "1559676996517363754",
+        "Prepare To Escape": "1559677042298064927",
+        "Edge Of Darkness": "1559677089437974598",
+        "Unheard": "1559677306044162108"
       }
     },
     "compressProfile": true,
