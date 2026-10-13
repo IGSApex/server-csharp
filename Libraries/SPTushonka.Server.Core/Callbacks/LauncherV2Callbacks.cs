@@ -60,7 +60,7 @@ public class LauncherV2Callbacks(
     public ValueTask<string> PasswordRequired()
     {
         return new ValueTask<string>(httpResponseUtil.NoBody(
-            new LauncherV2AuthSettingsResponse { Response = launcherV2Controller.RequirePasswords() }));
+            new LauncherV2AuthSettingsResponse { Response = launcherV2Controller.RequireLauncherAccount() }));
     }
 
     public ValueTask<string> Types()
@@ -79,7 +79,7 @@ public class LauncherV2Callbacks(
             new LauncherV2RegisterResponse
             {
                 Response = await launcherV2Controller.Register(info),
-                Profiles = profileController.GetMiniProfiles().Where(p => p.ProfileId is not null && launcherAccounts.Owns(info.LauncherToken, p.ProfileId)).ToList(),
+                Profiles = profileController.GetMiniProfiles().Where(p => !launcherV2Controller.RequireLauncherAccount() || (p.ProfileId is not null && launcherAccounts.Owns(info.LauncherToken, p.ProfileId))).ToList(),
             }
         );
     }
@@ -119,7 +119,7 @@ public class LauncherV2Callbacks(
     public ValueTask<string> Profiles(LauncherAccountRequest request)
     {
         return new ValueTask<string>(
-            httpResponseUtil.NoBody(new LauncherV2ProfilesResponse { Response = profileController.GetMiniProfiles().Where(p => p.ProfileId is not null && launcherAccounts.Owns(request.Token, p.ProfileId)).ToList() })
+            httpResponseUtil.NoBody(new LauncherV2ProfilesResponse { Response = profileController.GetMiniProfiles().Where(p => !launcherV2Controller.RequireLauncherAccount() || (p.ProfileId is not null && launcherAccounts.Owns(request.Token, p.ProfileId))).ToList() })
         );
     }
 
