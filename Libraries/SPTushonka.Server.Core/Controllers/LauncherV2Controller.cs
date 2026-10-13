@@ -66,7 +66,7 @@ public class LauncherV2Controller(
     {
         var sessionId = GetSessionId(info);
 
-        return !sessionId.IsEmpty;
+        return !sessionId.IsEmpty && (saveServer.GetProfile(sessionId).ProfileInfo?.Password is not { Length: > 0 } storedHash || Passwords.Verify(storedHash, info.Password));
     }
 
     /// <summary>
@@ -89,6 +89,8 @@ public class LauncherV2Controller(
             }
         }
 
+        if (string.IsNullOrWhiteSpace(info.Username)) return false;
+        if (!string.IsNullOrEmpty(info.Password) && !Passwords.IsValid(info.Password)) return false;
         await CreateAccount(info);
         return true;
     }
@@ -102,7 +104,8 @@ public class LauncherV2Controller(
     {
         var sessionId = GetSessionId(info);
 
-        return !sessionId.IsEmpty && saveServer.RemoveProfile(sessionId);
+        if (sessionId.IsEmpty || (saveServer.GetProfile(sessionId).ProfileInfo?.Password is { Length: > 0 } storedHash && !Passwords.Verify(storedHash, info.Password))) return false;
+        return saveServer.RemoveProfile(sessionId);
     }
 
     /// <summary>
@@ -157,6 +160,7 @@ public class LauncherV2Controller(
             ScavengerId = scavId,
             Aid = hashUtil.GenerateAccountId(),
             Username = info.Username,
+            Password = !string.IsNullOrEmpty(info.Password) ? Passwords.Hash(info.Password) : null,
             IsWiped = true,
             Edition = info.Edition,
         };
@@ -189,7 +193,7 @@ public class LauncherV2Controller(
 
     public MiniProfile? GetMiniProfileFromUsername(LoginRequestData info)
     {
-        return profileController.GetMiniProfile(GetSessionId(info));
+        return Login(info) ? profileController.GetMiniProfile(GetSessionId(info)) : null;
     }
 
     public bool Wipe(RegisterData info)
