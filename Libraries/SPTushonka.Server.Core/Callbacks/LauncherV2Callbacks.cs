@@ -18,6 +18,12 @@ public class LauncherV2Callbacks(
         return new ValueTask<string>(httpResponseUtil.NoBody(new LauncherV2PingResponse { Response = launcherV2Controller.Ping() }));
     }
 
+    public ValueTask<string> PasswordRequired()
+    {
+        return new ValueTask<string>(httpResponseUtil.NoBody(
+            new LauncherV2AuthSettingsResponse { Response = launcherV2Controller.RequirePasswords() }));
+    }
+
     public ValueTask<string> Types()
     {
         return new ValueTask<string>(httpResponseUtil.NoBody(new LauncherV2TypesResponse { Response = launcherV2Controller.Types() }));
