@@ -123,7 +123,7 @@ public class LauncherAccountStore
         lock (_sync)
         {
             var account = Read(auth.Username);
-            if (account is null || !account.SavedProfiles.RemoveAll(x => string.Equals(x, profileId, StringComparison.OrdinalIgnoreCase)).Equals(1))
+            if (account is null || account.SavedProfiles.RemoveAll(x => string.Equals(x, profileId, StringComparison.OrdinalIgnoreCase)) == 0)
                 return false;
             Write(account);
             return true;
