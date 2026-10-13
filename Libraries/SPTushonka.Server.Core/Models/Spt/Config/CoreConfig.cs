@@ -198,9 +198,6 @@ public record GameFixes
 
 public record ServerFeatures
 {
-    [JsonPropertyName("profileFeatures")]
-    public ProfileFeatures? ProfileFeatures { get; set; }
-
     [JsonPropertyName("fikaFeatures")]
     public FikaFeatures? FikaFeatures { get; set; }
 
@@ -259,19 +256,13 @@ public record CommandoFeatures
     public bool GiveCommandEnabled { get; set; }
 }
 
-public record ProfileFeatures
-{
-    [JsonPropertyName("profiles")]
-    public Dictionary<string, bool> Profiles { get; set; } = new(StringComparer.OrdinalIgnoreCase);
-}
-
 public record FikaFeatures
 {
     [JsonPropertyName("requirePasswords")]
-    public bool RequirePasswords { get; set; } = true;
+    public bool RequirePasswords { get; set; } = false;
 
     [JsonPropertyName("useDiscordForGameEditions")]
-    public bool UseDiscordForGameEditions { get; set; } = true;
+    public bool UseDiscordForGameEditions { get; set; } = false;
 
     [JsonPropertyName("discordBotToken")]
     public string DiscordBotToken { get; set; } = "";
@@ -285,18 +276,18 @@ public record FikaFeatures
 
 public record DiscordEditionRoles
 {
-    [JsonPropertyName("standard")]
+    [JsonPropertyName("Standard")]
     public string Standard { get; set; } = "";
 
-    [JsonPropertyName("leftBehind")]
+    [JsonPropertyName("Left Behind")]
     public string LeftBehind { get; set; } = "";
 
-    [JsonPropertyName("prepareToEscape")]
+    [JsonPropertyName("Prepare To Escape")]
     public string PrepareToEscape { get; set; } = "";
 
-    [JsonPropertyName("edgeOfDarkness")]
+    [JsonPropertyName("Edge Of Darkness")]
     public string EdgeOfDarkness { get; set; } = "";
 
-    [JsonPropertyName("unheard")]
+    [JsonPropertyName("Unheard")]
     public string Unheard { get; set; } = "";
 }
