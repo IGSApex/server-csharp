@@ -296,9 +296,7 @@
     }
   },
   "features": {
-    "fikaFeatures": {
-      "requirePasswords": false
-    },
+    "requireLauncherAccount": true,
     "compressProfile": true,
     "chatbotFeatures": {
       "sptFriendGiftsEnabled": true,
