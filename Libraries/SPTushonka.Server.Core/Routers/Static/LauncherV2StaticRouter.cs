@@ -13,6 +13,7 @@ public class LauncherV2StaticRouter(LauncherV2Callbacks launcherV2Callbacks, Jso
         jsonUtil,
         [
             new RouteAction<EmptyRequestData>("/launcher/v2/ping", async (_, _, _, _, _) => await launcherV2Callbacks.Ping()),
+            new RouteAction<EmptyRequestData>("/launcher/v2/password-required", async (_, _, _, _, _) => await launcherV2Callbacks.PasswordRequired()),
             new RouteAction<EmptyRequestData>("/launcher/v2/types", async (_, _, _, _, _) => await launcherV2Callbacks.Types()),
             new RouteAction<LoginRequestData>("/launcher/v2/login", async (_, info, _, _, _) => await launcherV2Callbacks.Login(info)),
             new RouteAction<RegisterData>("/launcher/v2/register", async (_, info, _, _, _) => await launcherV2Callbacks.Register(info)),
