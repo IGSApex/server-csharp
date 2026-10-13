@@ -201,12 +201,6 @@ public record ServerFeatures
     [JsonPropertyName("fikaFeatures")]
     public FikaFeatures? FikaFeatures { get; set; }
 
-    [JsonPropertyName("enableDiscord")]
-    public bool EnableDiscord { get; set; } = false;
-
-    [JsonPropertyName("discordFeatures")]
-    public DiscordFeatures? DiscordFeatures { get; set; }
-
     [JsonPropertyName("compressProfile")]
     public bool CompressProfile { get; set; }
 
@@ -266,37 +260,4 @@ public record FikaFeatures
 {
     [JsonPropertyName("requirePasswords")]
     public bool RequirePasswords { get; set; } = false;
-}
-
-public record DiscordFeatures
-{
-    [JsonPropertyName("discordBotToken")]
-    public string DiscordBotToken { get; set; } = "";
-
-    [JsonPropertyName("discordGuildID")]
-    public string DiscordGuildId { get; set; } = "";
-
-    [JsonPropertyName("useDiscordForGameEditions")]
-    public bool UseDiscordForGameEditions { get; set; } = false;
-
-    [JsonPropertyName("discordEditionRoles")]
-    public DiscordEditionRoles DiscordEditionRoles { get; set; } = new();
-}
-
-public record DiscordEditionRoles
-{
-    [JsonPropertyName("Standard")]
-    public string Standard { get; set; } = "";
-
-    [JsonPropertyName("Left Behind")]
-    public string LeftBehind { get; set; } = "";
-
-    [JsonPropertyName("Prepare To Escape")]
-    public string PrepareToEscape { get; set; } = "";
-
-    [JsonPropertyName("Edge Of Darkness")]
-    public string EdgeOfDarkness { get; set; } = "";
-
-    [JsonPropertyName("Unheard")]
-    public string Unheard { get; set; } = "";
 }
