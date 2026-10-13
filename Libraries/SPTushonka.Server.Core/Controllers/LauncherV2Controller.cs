@@ -83,7 +83,7 @@ public class LauncherV2Controller(
         if (coreConfig.Features.RequireLauncherAccount)
         {
             var account = launcherAccounts.Authenticate(info.LauncherToken);
-            if (account is null || (!string.IsNullOrWhiteSpace(account.EditionAllowed) && !string.Equals(info.Edition, account.EditionAllowed, StringComparison.OrdinalIgnoreCase))) return false;
+            if (account is null || (string.IsNullOrWhiteSpace(account.EditionAllowed) || (!string.Equals(account.EditionAllowed, "Any", StringComparison.OrdinalIgnoreCase) && !string.Equals(info.Edition, account.EditionAllowed, StringComparison.OrdinalIgnoreCase)))) return false;
         }
         if (IsEditionBlacklisted(info.Edition))
         {
@@ -222,7 +222,7 @@ public class LauncherV2Controller(
             return false;
         }
 
-        var sessionIsValid = Login(info) && (!coreConfig.Features.RequireLauncherAccount || (launcherAccounts.Authenticate(info.LauncherToken) is { } account && (string.IsNullOrWhiteSpace(account.EditionAllowed) || string.Equals(info.Edition, account.EditionAllowed, StringComparison.OrdinalIgnoreCase))));
+        var sessionIsValid = Login(info) && (!coreConfig.Features.RequireLauncherAccount || (launcherAccounts.Authenticate(info.LauncherToken) is { } account && (!string.IsNullOrWhiteSpace(account.EditionAllowed) && (string.Equals(account.EditionAllowed, "Any", StringComparison.OrdinalIgnoreCase) || string.Equals(info.Edition, account.EditionAllowed, StringComparison.OrdinalIgnoreCase)))));
 
         if (!sessionIsValid)
         {
