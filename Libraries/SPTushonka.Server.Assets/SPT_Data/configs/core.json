@@ -296,6 +296,33 @@
     }
   },
   "features": {
+    "profileFeatures": {
+      "profileToggles": {
+        "enableStandard": true,
+        "enableLeftBehind": true,
+        "enablePrepareToEscape": true,
+        "enableEdgeOfDarkness": true,
+        "enableUnheard": true,
+        "enableTournament": false,
+        "enableSPTDeveloper": false,
+        "enableSPTEasyStart": false,
+        "enableSPTZeroToHero": false
+      }
+    },
+    "fikaFeatures": {
+      "enableFikaExtras": true,
+      "requirePasswords": true,
+      "useDiscordForGameEditions": true,
+      "discordBotToken": "",
+      "discordGuildID": "",
+      "discordEditionRoles": {
+        "standard": "",
+        "leftBehind": "",
+        "prepareToEscape": "",
+        "edgeOfDarkness": "",
+        "unheard": ""
+      }
+    },
     "compressProfile": true,
     "chatbotFeatures": {
       "sptFriendGiftsEnabled": true,
