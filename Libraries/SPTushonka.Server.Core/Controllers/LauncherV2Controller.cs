@@ -40,14 +40,14 @@ public class LauncherV2Controller(
     ///     - This is also localised.
     /// </summary>
     /// <returns>dict of profile names + description</returns>
-    public Dictionary<string, string> Types(string? allowedEdition = null)
+    public Dictionary<string, string> Types()
     {
         var result = new Dictionary<string, string>();
         var dbProfiles = templateTable.Profiles;
 
         foreach (var (templateName, template) in dbProfiles)
         {
-            if (IsEditionBlacklisted(templateName) && !string.Equals(templateName, allowedEdition, StringComparison.OrdinalIgnoreCase))
+            if (IsEditionBlacklisted(templateName))
             {
                 continue;
             }
@@ -85,9 +85,8 @@ public class LauncherV2Controller(
             var account = launcherAccounts.Authenticate(info.LauncherToken);
             if (account is null || (!string.Equals(info.Edition, account.EditionAllowed, StringComparison.OrdinalIgnoreCase))) return false;
         }
-        // Only editions actually offered by this server may be created, including for "Any" accounts.
-        if (string.IsNullOrWhiteSpace(info.Edition)
-            || !Types(coreConfig.Features.RequireLauncherAccount ? launcherAccounts.Authenticate(info.LauncherToken)?.EditionAllowed : null).ContainsKey(info.Edition))
+        if (string.IsNullOrWhiteSpace(info.Edition) || IsEditionBlacklisted(info.Edition)
+            || !Types().ContainsKey(info.Edition))
         {
             return false;
         }
