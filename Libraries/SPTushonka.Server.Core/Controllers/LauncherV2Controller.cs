@@ -22,7 +22,8 @@ public class LauncherV2Controller(
     ServerLocalisationService serverLocalisationService,
     CoreConfig coreConfig,
     Watermark watermark,
-    ProfileController profileController
+    ProfileController profileController,
+    LauncherAccountStore launcherAccounts
 )
 {
     /// <summary>
@@ -66,7 +67,7 @@ public class LauncherV2Controller(
     {
         var sessionId = GetSessionId(info);
 
-        if (sessionId.IsEmpty) return false;
+        if (sessionId.IsEmpty || !launcherAccounts.Owns(info.LauncherToken, sessionId.ToString())) return false;
         if (!RequirePasswords()) return true;
         return saveServer.GetProfile(sessionId).ProfileInfo?.Password is { Length: > 0 } storedHash
             && Passwords.Verify(storedHash, info.Password);
@@ -79,6 +80,8 @@ public class LauncherV2Controller(
     /// <returns></returns>
     public async Task<bool> Register(RegisterData info)
     {
+        var account = launcherAccounts.Authenticate(info.LauncherToken);
+        if (account is null || !string.Equals(info.Edition, account.EditionAllowed, StringComparison.OrdinalIgnoreCase)) return false;
         if (IsEditionBlacklisted(info.Edition))
         {
             return false;
@@ -94,7 +97,12 @@ public class LauncherV2Controller(
 
         if (string.IsNullOrWhiteSpace(info.Username)) return false;
         if (RequirePasswords() && !Passwords.IsValid(info.Password)) return false;
-        await CreateAccount(info);
+        var profileId = await CreateAccount(info);
+        if (!launcherAccounts.AddProfile(info.LauncherToken, profileId.ToString()))
+        {
+            saveServer.RemoveProfile(profileId);
+            return false;
+        }
         return true;
     }
 
@@ -108,7 +116,9 @@ public class LauncherV2Controller(
         var sessionId = GetSessionId(info);
 
         if (!Login(info)) return false;
-        return saveServer.RemoveProfile(sessionId);
+        if (!launcherAccounts.Owns(info.LauncherToken, sessionId.ToString())) return false;
+        if (!saveServer.RemoveProfile(sessionId)) return false;
+        return launcherAccounts.RemoveProfile(info.LauncherToken, sessionId.ToString());
     }
 
     /// <summary>
@@ -163,7 +173,7 @@ public class LauncherV2Controller(
             ScavengerId = scavId,
             Aid = hashUtil.GenerateAccountId(),
             Username = info.Username,
-            Password = RequirePasswords() ? Passwords.Hash(info.Password!) : null,
+            Password = null,
             IsWiped = true,
             Edition = info.Edition,
         };
@@ -232,7 +242,7 @@ public class LauncherV2Controller(
             return false;
         }
 
-        var sessionIsValid = Login(info);
+        var sessionIsValid = Login(info) && string.Equals(info.Edition, launcherAccounts.Authenticate(info.LauncherToken)?.EditionAllowed, StringComparison.OrdinalIgnoreCase);
 
         if (!sessionIsValid)
         {
