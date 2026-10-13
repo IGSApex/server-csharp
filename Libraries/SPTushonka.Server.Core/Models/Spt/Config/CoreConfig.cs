@@ -261,45 +261,12 @@ public record CommandoFeatures
 
 public record ProfileFeatures
 {
-    [JsonPropertyName("profileToggles")]
-    public ProfileToggles ProfileToggles { get; set; } = new();
-}
-
-public record ProfileToggles
-{
-    [JsonPropertyName("enableStandard")]
-    public bool EnableStandard { get; set; } = true;
-
-    [JsonPropertyName("enableLeftBehind")]
-    public bool EnableLeftBehind { get; set; } = true;
-
-    [JsonPropertyName("enablePrepareToEscape")]
-    public bool EnablePrepareToEscape { get; set; } = true;
-
-    [JsonPropertyName("enableEdgeOfDarkness")]
-    public bool EnableEdgeOfDarkness { get; set; } = true;
-
-    [JsonPropertyName("enableUnheard")]
-    public bool EnableUnheard { get; set; } = true;
-
-    [JsonPropertyName("enableTournament")]
-    public bool EnableTournament { get; set; }
-
-    [JsonPropertyName("enableSPTDeveloper")]
-    public bool EnableSptDeveloper { get; set; }
-
-    [JsonPropertyName("enableSPTEasyStart")]
-    public bool EnableSptEasyStart { get; set; }
-
-    [JsonPropertyName("enableSPTZeroToHero")]
-    public bool EnableSptZeroToHero { get; set; }
+    [JsonPropertyName("profiles")]
+    public Dictionary<string, bool> Profiles { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }
 
 public record FikaFeatures
 {
-    [JsonPropertyName("enableFikaExtras")]
-    public bool EnableFikaExtras { get; set; } = true;
-
     [JsonPropertyName("requirePasswords")]
     public bool RequirePasswords { get; set; } = true;
 
