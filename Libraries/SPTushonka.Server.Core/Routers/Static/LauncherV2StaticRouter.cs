@@ -3,6 +3,7 @@ using SPTarkov.Server.Core.Callbacks;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Launcher;
+using SPTarkov.Server.Core.Models.Spt.Launcher;
 using SPTarkov.Server.Core.Utils;
 
 namespace SPTarkov.Server.Core.Routers.Static;
@@ -12,6 +13,10 @@ public class LauncherV2StaticRouter(LauncherV2Callbacks launcherV2Callbacks, Jso
     : StaticRouter(
         jsonUtil,
         [
+            new RouteAction<LauncherAccountRequest>("/launcher/v2/account/register", async (_, info, _, _, _) => await launcherV2Callbacks.AccountRegister(info)),
+            new RouteAction<LauncherAccountRequest>("/launcher/v2/account/login", async (_, info, _, _, _) => await launcherV2Callbacks.AccountLogin(info)),
+            new RouteAction<LauncherAccountRequest>("/launcher/v2/account/session", async (_, info, _, _, _) => await launcherV2Callbacks.AccountSession(info)),
+            new RouteAction<LauncherAccountRequest>("/launcher/v2/account/logout", async (_, info, _, _, _) => await launcherV2Callbacks.AccountLogout(info)),
             new RouteAction<EmptyRequestData>("/launcher/v2/ping", async (_, _, _, _, _) => await launcherV2Callbacks.Ping()),
             new RouteAction<EmptyRequestData>("/launcher/v2/password-required", async (_, _, _, _, _) => await launcherV2Callbacks.PasswordRequired()),
             new RouteAction<EmptyRequestData>("/launcher/v2/types", async (_, _, _, _, _) => await launcherV2Callbacks.Types()),
@@ -24,7 +29,7 @@ public class LauncherV2StaticRouter(LauncherV2Callbacks launcherV2Callbacks, Jso
             ),
             new RouteAction<EmptyRequestData>("/launcher/v2/mods", async (_, _, _, _, _) => await launcherV2Callbacks.Mods()),
             new RouteAction<EmptyRequestData>("/launcher/v2/mod-pages", async (_, _, _, _, _) => await launcherV2Callbacks.ModPages()),
-            new RouteAction<EmptyRequestData>("/launcher/v2/profiles", async (_, _, _, _, _) => await launcherV2Callbacks.Profiles()),
+            new RouteAction<LauncherAccountRequest>("/launcher/v2/profiles", async (_, info, _, _, _) => await launcherV2Callbacks.Profiles(info)),
             new RouteAction<LoginRequestData>("/launcher/v2/profile", async (_, info, _, _, _) => await launcherV2Callbacks.Profile(info)),
             new RouteAction<RegisterData>("/launcher/v2/wipe", async (_, info, _, _, _) => await launcherV2Callbacks.Wipe(info)),
         ]
