@@ -40,7 +40,10 @@ public static class SPTWeb
                 .ToList()
         );
 
-        builder.WebHost.UseStaticWebAssets();
+        if (builder.Environment.IsDevelopment())
+        {
+            builder.WebHost.UseStaticWebAssets();
+        }
         builder.Services.AddMudServices();
         builder
             .Services.AddAuthentication(AuthService.AuthenticationScheme)
