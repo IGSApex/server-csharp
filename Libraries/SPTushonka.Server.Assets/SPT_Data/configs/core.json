@@ -296,30 +296,17 @@
     }
   },
   "features": {
-    "profileFeatures": {
-      "profiles": {
-        "Standard": true,
-        "Left Behind": true,
-        "Prepare To Escape": true,
-        "Edge Of Darkness": true,
-        "Unheard": true,
-        "Tournament": false,
-        "SPT Developer": false,
-        "SPT Easy start": false,
-        "SPT Zero to hero": false
-      }
-    },
     "fikaFeatures": {
-      "requirePasswords": true,
-      "useDiscordForGameEditions": true,
-      "discordBotToken": "",
-      "discordGuildID": "",
+      "requirePasswords": false,
+      "useDiscordForGameEditions": false,
+      "discordBotToken": "your_discord_bot_token",
+      "discordGuildID": "your_discord_guild_id",
       "discordEditionRoles": {
-        "standard": "",
-        "leftBehind": "",
-        "prepareToEscape": "",
-        "edgeOfDarkness": "",
-        "unheard": ""
+        "Standard": "role_id or blank to allow everyone",
+        "Left Behind": "role_id",
+        "Prepare To Escape": "role_id",
+        "Edge Of Darkness": "role_id",
+        "Unheard": "role_id"
       }
     },
     "compressProfile": true,
