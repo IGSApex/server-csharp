@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Launcher;
@@ -23,7 +24,8 @@ public class LauncherV2Controller(
     CoreConfig coreConfig,
     Watermark watermark,
     ProfileController profileController,
-    LauncherAccountStore launcherAccounts
+    LauncherAccountStore launcherAccounts,
+    ILogger<LauncherV2Controller> logger
 )
 {
     /// <summary>
@@ -83,29 +85,56 @@ public class LauncherV2Controller(
         if (coreConfig.Features.RequireLauncherAccount)
         {
             var account = launcherAccounts.Authenticate(info.LauncherToken);
-            if (account is null || (!string.Equals(info.Edition, account.EditionAllowed, StringComparison.OrdinalIgnoreCase))) return false;
+            if (account is null)
+            {
+                logger.LogWarning("Profile registration rejected: launcher token is not authenticated");
+                return false;
+            }
+            if (!string.Equals(info.Edition, account.EditionAllowed, StringComparison.OrdinalIgnoreCase))
+            {
+                logger.LogWarning("Profile registration rejected: requested edition {RequestedEdition} differs from allowed edition {AllowedEdition}", info.Edition, account.EditionAllowed);
+                return false;
+            }
         }
-        if (string.IsNullOrWhiteSpace(info.Edition) || IsEditionBlacklisted(info.Edition)
-            || !Types().ContainsKey(info.Edition))
+
+        if (string.IsNullOrWhiteSpace(info.Edition))
         {
+            logger.LogWarning("Profile registration rejected: edition is empty");
+            return false;
+        }
+        if (IsEditionBlacklisted(info.Edition))
+        {
+            logger.LogWarning("Profile registration rejected: edition {Edition} is blacklisted", info.Edition);
+            return false;
+        }
+        if (!Types().ContainsKey(info.Edition))
+        {
+            logger.LogWarning("Profile registration rejected: edition {Edition} is missing from available profile templates", info.Edition);
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(info.Username))
+        {
+            logger.LogWarning("Profile registration rejected: profile username is empty");
             return false;
         }
 
         foreach (var (_, profile) in saveServer.GetProfiles())
         {
-            if (info.Username == profile.ProfileInfo!.Username)
+            if (info.Username == profile.ProfileInfo?.Username)
             {
+                logger.LogWarning("Profile registration rejected: username {Username} already exists", info.Username);
                 return false;
             }
         }
 
-        if (string.IsNullOrWhiteSpace(info.Username)) return false;
         var profileId = await CreateAccount(info);
         if (coreConfig.Features.RequireLauncherAccount && !launcherAccounts.AddProfile(info.LauncherToken, profileId.ToString()))
         {
+            logger.LogError("Profile registration failed: could not associate profile {ProfileId} with launcher account", profileId);
             saveServer.RemoveProfile(profileId);
             return false;
         }
+        logger.LogInformation("Profile registration succeeded for profile {ProfileId}", profileId);
         return true;
     }
 
