@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 ﻿using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Controllers;
 using SPTarkov.Server.Core.Models.Eft.Launcher;
@@ -11,7 +12,8 @@ public class LauncherV2Callbacks(
     HttpResponseUtil httpResponseUtil,
     LauncherV2Controller launcherV2Controller,
     ProfileController profileController,
-    LauncherAccountStore launcherAccounts
+    LauncherAccountStore launcherAccounts,
+    ILogger<LauncherV2Callbacks> logger
 )
 {
     public ValueTask<string> AccountRegister(LauncherAccountRequest request)
@@ -22,15 +24,23 @@ public class LauncherV2Callbacks(
 
     public ValueTask<string> AccountLogin(LauncherAccountRequest request)
     {
-        var session = launcherAccounts.Login(request.Username, request.Password);
-        return new ValueTask<string>(httpResponseUtil.NoBody(new LauncherAccountResponse
+        try
         {
-            Response = session is not null,
-            Token = session?.Token,
-            Username = session?.Username,
-            EditionAllowed = session?.EditionAllowed,
-            SavedProfiles = session?.SavedProfiles ?? []
-        }));
+            var session = launcherAccounts.Login(request.Username, request.Password);
+            return new ValueTask<string>(httpResponseUtil.NoBody(new LauncherAccountResponse
+            {
+                Response = session is not null,
+                Token = session?.Token,
+                Username = session?.Username,
+                EditionAllowed = session?.EditionAllowed,
+                SavedProfiles = session?.SavedProfiles ?? []
+            }));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Launcher account login failed for {Username}", request.Username);
+            return new ValueTask<string>(httpResponseUtil.NoBody(new LauncherAccountResponse { Response = false }));
+        }
     }
 
     public ValueTask<string> AccountSession(LauncherAccountRequest request)
