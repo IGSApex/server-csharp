@@ -201,6 +201,9 @@ public record ServerFeatures
     [JsonPropertyName("fikaFeatures")]
     public FikaFeatures? FikaFeatures { get; set; }
 
+    [JsonPropertyName("enableDiscord")]
+    public bool EnableDiscord { get; set; } = false;
+
     [JsonPropertyName("discordFeatures")]
     public DiscordFeatures? DiscordFeatures { get; set; }
 
