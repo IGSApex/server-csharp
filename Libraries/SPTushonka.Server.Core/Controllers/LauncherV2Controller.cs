@@ -183,30 +183,8 @@ public class LauncherV2Controller(
         return profileId;
     }
 
-    // Fika-specific settings are active only when both server plugin assemblies are installed.
-    public bool RequirePasswords()
-    {
-        if (coreConfig.Features.FikaFeatures?.RequirePasswords != true)
-        {
-            return false;
-        }
-
-        // Server hosts may start with a different working directory than the runtime folder.
-        // Check both the executable directory and its parent, as well as the working directory.
-        var roots = new[]
-        {
-            AppContext.BaseDirectory,
-            Environment.CurrentDirectory,
-            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..")),
-        };
-
-        return roots.Any(root =>
-        {
-            var fikaDirectory = Path.Combine(root, "user", "mods", "fika-server");
-            return File.Exists(Path.Combine(fikaDirectory, "FikaServer.dll"))
-                && File.Exists(Path.Combine(fikaDirectory, "FikaShared.dll"));
-        });
-    }
+    // Per-game-profile passwords are superseded by launcher account sessions.
+    public bool RequirePasswords() => false;
 
     protected bool IsEditionBlacklisted(string? edition)
     {
