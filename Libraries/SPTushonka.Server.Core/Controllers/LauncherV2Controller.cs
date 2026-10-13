@@ -68,9 +68,7 @@ public class LauncherV2Controller(
         var sessionId = GetSessionId(info);
 
         if (sessionId.IsEmpty || !launcherAccounts.Owns(info.LauncherToken, sessionId.ToString())) return false;
-        if (!RequirePasswords()) return true;
-        return saveServer.GetProfile(sessionId).ProfileInfo?.Password is { Length: > 0 } storedHash
-            && Passwords.Verify(storedHash, info.Password);
+        return true;
     }
 
     /// <summary>
@@ -96,7 +94,6 @@ public class LauncherV2Controller(
         }
 
         if (string.IsNullOrWhiteSpace(info.Username)) return false;
-        if (RequirePasswords() && !Passwords.IsValid(info.Password)) return false;
         var profileId = await CreateAccount(info);
         if (!launcherAccounts.AddProfile(info.LauncherToken, profileId.ToString()))
         {
