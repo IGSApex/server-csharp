@@ -201,6 +201,9 @@ public record ServerFeatures
     [JsonPropertyName("fikaFeatures")]
     public FikaFeatures? FikaFeatures { get; set; }
 
+    [JsonPropertyName("discordFeatures")]
+    public DiscordFeatures? DiscordFeatures { get; set; }
+
     [JsonPropertyName("compressProfile")]
     public bool CompressProfile { get; set; }
 
@@ -260,15 +263,18 @@ public record FikaFeatures
 {
     [JsonPropertyName("requirePasswords")]
     public bool RequirePasswords { get; set; } = false;
+}
 
-    [JsonPropertyName("useDiscordForGameEditions")]
-    public bool UseDiscordForGameEditions { get; set; } = false;
-
+public record DiscordFeatures
+{
     [JsonPropertyName("discordBotToken")]
     public string DiscordBotToken { get; set; } = "";
 
     [JsonPropertyName("discordGuildID")]
     public string DiscordGuildId { get; set; } = "";
+
+    [JsonPropertyName("useDiscordForGameEditions")]
+    public bool UseDiscordForGameEditions { get; set; } = false;
 
     [JsonPropertyName("discordEditionRoles")]
     public DiscordEditionRoles DiscordEditionRoles { get; set; } = new();
