@@ -85,7 +85,9 @@ public class LauncherV2Controller(
             var account = launcherAccounts.Authenticate(info.LauncherToken);
             if (account is null || (string.IsNullOrWhiteSpace(account.EditionAllowed) || (!string.Equals(account.EditionAllowed, "Any", StringComparison.OrdinalIgnoreCase) && !string.Equals(info.Edition, account.EditionAllowed, StringComparison.OrdinalIgnoreCase)))) return false;
         }
-        if (IsEditionBlacklisted(info.Edition))
+        // Only editions actually offered by this server may be created, including for "Any" accounts.
+        if (string.IsNullOrWhiteSpace(info.Edition) || IsEditionBlacklisted(info.Edition)
+            || !Types().ContainsKey(info.Edition))
         {
             return false;
         }
