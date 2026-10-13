@@ -297,20 +297,19 @@
   },
   "features": {
     "profileFeatures": {
-      "profileToggles": {
-        "enableStandard": true,
-        "enableLeftBehind": true,
-        "enablePrepareToEscape": true,
-        "enableEdgeOfDarkness": true,
-        "enableUnheard": true,
-        "enableTournament": false,
-        "enableSPTDeveloper": false,
-        "enableSPTEasyStart": false,
-        "enableSPTZeroToHero": false
+      "profiles": {
+        "Standard": true,
+        "Left Behind": true,
+        "Prepare To Escape": true,
+        "Edge Of Darkness": true,
+        "Unheard": true,
+        "Tournament": false,
+        "SPT Developer": false,
+        "SPT Easy start": false,
+        "SPT Zero to hero": false
       }
     },
     "fikaFeatures": {
-      "enableFikaExtras": true,
       "requirePasswords": true,
       "useDiscordForGameEditions": true,
       "discordBotToken": "",
