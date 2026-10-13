@@ -198,6 +198,12 @@ public record GameFixes
 
 public record ServerFeatures
 {
+    [JsonPropertyName("profileFeatures")]
+    public ProfileFeatures? ProfileFeatures { get; set; }
+
+    [JsonPropertyName("fikaFeatures")]
+    public FikaFeatures? FikaFeatures { get; set; }
+
     [JsonPropertyName("compressProfile")]
     public bool CompressProfile { get; set; }
 
@@ -251,4 +257,79 @@ public record CommandoFeatures
 {
     [JsonPropertyName("giveCommandEnabled")]
     public bool GiveCommandEnabled { get; set; }
+}
+
+public record ProfileFeatures
+{
+    [JsonPropertyName("profileToggles")]
+    public ProfileToggles ProfileToggles { get; set; } = new();
+}
+
+public record ProfileToggles
+{
+    [JsonPropertyName("enableStandard")]
+    public bool EnableStandard { get; set; } = true;
+
+    [JsonPropertyName("enableLeftBehind")]
+    public bool EnableLeftBehind { get; set; } = true;
+
+    [JsonPropertyName("enablePrepareToEscape")]
+    public bool EnablePrepareToEscape { get; set; } = true;
+
+    [JsonPropertyName("enableEdgeOfDarkness")]
+    public bool EnableEdgeOfDarkness { get; set; } = true;
+
+    [JsonPropertyName("enableUnheard")]
+    public bool EnableUnheard { get; set; } = true;
+
+    [JsonPropertyName("enableTournament")]
+    public bool EnableTournament { get; set; }
+
+    [JsonPropertyName("enableSPTDeveloper")]
+    public bool EnableSptDeveloper { get; set; }
+
+    [JsonPropertyName("enableSPTEasyStart")]
+    public bool EnableSptEasyStart { get; set; }
+
+    [JsonPropertyName("enableSPTZeroToHero")]
+    public bool EnableSptZeroToHero { get; set; }
+}
+
+public record FikaFeatures
+{
+    [JsonPropertyName("enableFikaExtras")]
+    public bool EnableFikaExtras { get; set; } = true;
+
+    [JsonPropertyName("requirePasswords")]
+    public bool RequirePasswords { get; set; } = true;
+
+    [JsonPropertyName("useDiscordForGameEditions")]
+    public bool UseDiscordForGameEditions { get; set; } = true;
+
+    [JsonPropertyName("discordBotToken")]
+    public string DiscordBotToken { get; set; } = "";
+
+    [JsonPropertyName("discordGuildID")]
+    public string DiscordGuildId { get; set; } = "";
+
+    [JsonPropertyName("discordEditionRoles")]
+    public DiscordEditionRoles DiscordEditionRoles { get; set; } = new();
+}
+
+public record DiscordEditionRoles
+{
+    [JsonPropertyName("standard")]
+    public string Standard { get; set; } = "";
+
+    [JsonPropertyName("leftBehind")]
+    public string LeftBehind { get; set; } = "";
+
+    [JsonPropertyName("prepareToEscape")]
+    public string PrepareToEscape { get; set; } = "";
+
+    [JsonPropertyName("edgeOfDarkness")]
+    public string EdgeOfDarkness { get; set; } = "";
+
+    [JsonPropertyName("unheard")]
+    public string Unheard { get; set; } = "";
 }
