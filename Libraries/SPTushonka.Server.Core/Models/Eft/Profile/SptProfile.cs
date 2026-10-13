@@ -86,6 +86,10 @@ public record Info
     [JsonPropertyName("username")]
     public string? Username { get; set; }
 
+    [JsonPropertyName("password")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Password { get; set; }
+
     [JsonPropertyName("wipe")]
     public bool? IsWiped { get; set; }
 
