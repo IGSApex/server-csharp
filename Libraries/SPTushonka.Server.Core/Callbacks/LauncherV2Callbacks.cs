@@ -91,7 +91,7 @@ public class LauncherV2Callbacks(
                 new LauncherV2RemoveResponse
                 {
                     Response = launcherV2Controller.Remove(info),
-                    Profiles = profileController.GetMiniProfiles().Where(p => p.ProfileId is not null && launcherAccounts.Owns(info.LauncherToken, p.ProfileId)).ToList(),
+                    Profiles = profileController.GetMiniProfiles().Where(p => !launcherV2Controller.RequireLauncherAccount() || (p.ProfileId is not null && launcherAccounts.Owns(info.LauncherToken, p.ProfileId))).ToList(),
                 }
             )
         );
@@ -114,6 +114,12 @@ public class LauncherV2Callbacks(
         return new ValueTask<string>(
             httpResponseUtil.NoBody(new LauncherV2ModPagesResponse { Response = launcherV2Controller.ModPages() })
         );
+    }
+
+    public ValueTask<string> LocalProfiles()
+    {
+        var profiles = launcherV2Controller.RequireLauncherAccount() ? [] : profileController.GetMiniProfiles();
+        return new ValueTask<string>(httpResponseUtil.NoBody(new LauncherV2ProfilesResponse { Response = profiles }));
     }
 
     public ValueTask<string> Profiles(LauncherAccountRequest request)
