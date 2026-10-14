@@ -63,6 +63,12 @@
   <ItemGroup>
     <None Include="..\LICENSE" Pack="true" Visible="false" PackagePath="" />
   </ItemGroup>
+  <!-- Bundle our pinned default mods directly into the SPT publish output.
+       Mod archives are obtained from their upstream releases, not compiled into the server DLL. -->
+  <Target Name="InstallDefaultMods" AfterTargets="Publish"
+          Condition="'$(PublishDir)' != '' and '$(InstallDefaultMods)' != 'false'">
+    <Exec Command="pwsh -NoProfile -File &quot;$(MSBuildProjectDirectory)/../Tools/DefaultMods/Install-DefaultMods.ps1&quot; -Destination &quot;$(PublishDir)&quot;" />
+  </Target>
   <Target Name="RelocateSatelliteAssemblies" AfterTargets="ResolveAssemblyReferences">
     <ItemGroup>
       <_RelocatedSatelliteCulture
