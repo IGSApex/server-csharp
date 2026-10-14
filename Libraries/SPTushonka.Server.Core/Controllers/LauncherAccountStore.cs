@@ -15,7 +15,9 @@ namespace SPTarkov.Server.Core.Controllers;
 public class LauncherAccountStore
 {
     private readonly object _sync = new();
-    private readonly ConcurrentDictionary<string, LauncherSession> _sessions = new();
+    // Shared across DI-created store instances so account login and profile registration
+    // validate against the same live server session registry.
+    private static readonly ConcurrentDictionary<string, LauncherSession> _sessions = new();
     private readonly string _directory;
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
