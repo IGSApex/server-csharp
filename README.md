@@ -1,136 +1,63 @@
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/SP-Tushonka/server-csharp)
+# IGS Gaming Community — SPT Server
 
-# Single Player Tushonka - Server Project
+Community fork of the [SP-Tushonka C# server](https://github.com/SP-Tushonka/server-csharp), used with the [IGS launcher](https://github.com/IGSApex/launcher) and Fika components. The current development target is SPT 4.1.6.
 
-This is the Server project for the Single Player Tushonka mod for Escape from Tushonka. It can be run locally to replicate responses to the modified Escape from Tushonka client.
+## Community additions
 
+### Launcher account system
 
-# Table of Contents
+The launcher can probe `/launcher/v2/launcher-account-required` to determine whether server-specific account authentication is enabled. Account endpoints under `/launcher/v2/account/` support registration, login, session checks and account-associated profiles. The server remains authoritative for authentication and profile ownership; existing game profiles on disk should not be deleted during migration.
 
-- [Features](#features)
-- [Installation](#installation)
-  - [Requirements](#requirements)
-  - [Initial Setup](#initial-setup)
-- [Development](#development)
-  - [Commands](#commands)
-  - [Debugging](#debugging)
-  - [Mod Debugging](#mod-debugging)
-- [Deployment](#deployment)
-- [Contributing](#contributing)
-  - [Branches](#branchs)
-  - [Pull Request Guidelines](#pull-request-guidelines)
-  - [Git LFS](#git-large-file-storage-lfs)
-  - [Style Guide](#style-guide)
-  - [Tests](#tests)
-- [License](#license)
+`LauncherAccountStore` manages the account/session data. Session tokens are random bearer credentials; the current implementation persists **hashes** of tokens in `sessions.json` and applies a 30-day expiration. Clients should protect their saved tokens and should not treat a remembered login as permanent authorization.
 
-## Features
+### Client mod manifest and downloads
 
-For a full list of features, please see [FEATURES.md](FEATURES.md)
+`ClientModDistributionService` discovers the server's `BepInEx` directory relative to the working directory or executable directory, including the parent of `SPT_Runtime`. It recursively enumerates:
 
-## Installation
+```text
+SPT_Server/
+├── BepInEx/
+│   ├── plugins/
+│   │   ├── Fika/Fika.Core.dll
+│   │   └── WTT-ArmoryClient/...
+│   └── patchers/
+│       └── WTT-ContentBackportPatcher/...
+└── SPT_Runtime/
+```
 
-### Requirements
+The service publishes relative paths, names, file versions, lengths and SHA-256 hashes through `GET /launcher/v2/client-mods`. The launcher requests file contents using `/files/client-mod/{relative-path}`. Paths are checked to prevent traversal outside the BepInEx root. Standard `plugins/spt/`, `patchers/spt-prepatch.dll`, and `patchers/FixPluginTypesSerialization.dll` are excluded.
 
-This project has been built in [Visual Studio](https://visualstudio.microsoft.com/) (VS) and [Rider](https://www.jetbrains.com/rider/) using [.NET](https://dotnet.microsoft.com/en-us/)
+**Important:** This scans actual files, not a curated mod registry. Non-DLL files in eligible folders may appear as entries. Keep only files you intend to distribute in these directories; review licensing and secrets before making a server accessible. This is not a package manager or cryptographic signature system. A client trusting this endpoint may execute the distributed DLLs.
 
-One of the following is required:
-- Minimum Visual Studio version required: `17.13.5`
-- Minimum Rider version required: `2024.3`
+### Other functionality
 
-### Initial Setup
+Core SPT profile, mod, bundle, webserver and gameplay endpoints remain in place. Fika multiplayer functionality is maintained separately in [IGSApex/Fika-Server-CSharp](https://github.com/IGSApex/Fika-Server-CSharp).
 
-1. Download and install the [.net 10.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0).
-2. Run `git clone https://github.com/SP-Tushonka/server-csharp.git server` to clone the repository
-3. Run `git lfs pull` to download LFS files locally.
-4. Open the `project/server-csharp.sln` file in Visual Studio or Rider
-5. Run `Build > Build Solution (CTRL + SHIFT + B)` in the IDE
+## Setup and build
 
-## Development
+Requirements: .NET 10 SDK, Visual Studio or Rider, Git LFS for any tracked large dependencies. Clone this fork, not the upstream repository:
 
-### Commands
+```powershell
+git clone https://github.com/IGSApex/server-csharp.git
+cd server-csharp
+git lfs pull
+dotnet restore
+dotnet build -c Release
+```
 
-### Debugging
+Open the solution in your IDE if preferred. Deploy the built server files according to the project's publish configuration and retain `SPT_Runtime` data when upgrading. Restart the server after deploying updated binaries. Do not overwrite persistent profiles or accounts without backups.
 
-To debug the project in Visual Studio:
-1. Choose `Server` and `Spt Server` in the debug drop-downs
-2. Choose `Debug > Start Debugging (F5)` to run the server
+## Diagnosing Mod Manager
 
-And in Rider:
-1. Choose the configuration called `SPTushonka.Server: Spt Server Debug`
-2. Press `(Alt + F5)` to start debugging
+1. Open `http://SERVER:PORT/launcher/v2/client-mods` from an authorized test machine.
+2. Confirm the JSON array contains expected `plugins/...` and `patchers/...` paths, sizes and hashes.
+3. If empty, verify the server process's working directory and that `BepInEx` is beside `SPT_Runtime` (or otherwise discoverable).
+4. Test one download and verify its hash before rolling out to players.
 
-### Mod Debugging
+The manifest and file-transfer features have not been fully end-to-end validated. Test on a nonproduction installation.
 
-To debug a server mod in Visual Studio, you can copy the mod DLL into the `user/mods` folder and then start the server.
+## Related projects
 
-## Deployment
+[Launcher](https://github.com/IGSApex/launcher) · [Fika client](https://github.com/IGSApex/Fika-Plugin) · [Fika server](https://github.com/IGSApex/Fika-Server-CSharp)
 
-To build the project via CLI:
-1. Open the terminal at the project root
-2. Run the command `dotnet publish`
-    - `-c Release` for release build
-    - `-p:SptVersion=*.*.*` to set the version ProgramStatics uses
-    - `-p:SptCommit=******` to set the commit ProgramStatics uses
-    - `-p:SptBuildTime=*********` to set the buildTime ProgramStatic uses
-    - `-p:SptBuildType=*********` to set the BuildType ProgramStatic uses
-    - Options for `SptBuildType`: `LOCAL`, `DEBUG`, `RELEASE`, `BLEEDINGEDGE`, `BLEEDINGEDGEMODS`
-
-## Contributing
-
-We're really excited that you're interested in contributing! Before submitting your contribution, please consider the following:
-
-### Branches
-
-- **master**
-  The default branch used for the latest stable release. This branch is protected and typically is only merged with release branches.
-- **develop (4.0x)**
-  The 4.0 branch for server development. **There is no more work being done on 4.0 at the moment, this branch should not be targeted!**
-- **4.1x-dev**
-  The 4.1 branch for server development. **PRs should target this.**
-
-### Pull Request Guidelines
-
-- **Keep Them Small**
-  If you're fixing a bug, try to keep the changes to the bug fix only. If you're adding a feature, try to keep the changes to the feature only. This will make it easier to review and merge your changes.
-- **Perform a Self-Review**
-  Before submitting your changes, review your own code. This will help you catch any mistakes you may have made.
-- **Remove Noise**
-  Remove any unnecessary changes to white space, code style formatting, or some text change that has no impact related to the intention of the PR.
-- **Create a Meaningful Title**
-  When creating a PR, make sure the title is meaningful and describes the changes you've made.
-- **Write Detailed Commit Messages**
-  Bring out your table manners, speak the Queen's English and be on your best behaviour.
-
-### Git Large File Storage (LFS)
-
-We use a custom git LFS server to store large files. The public server is read-only. If you are adding or modifying large files, you will need to create an issue with details about this change so that a project developer can make them to a writable endpoint of the LFS server. Bonus points if you include a patch file in the issue. **You will not be able to submit a pull request for LFS file changes.**
-
-### Style Guide
-
-We use [CSharpier](https://csharpier.com/) to keep the project's code styled/formatted. The version is pinned in [`.config/dotnet-tools.json`](.config/dotnet-tools.json), so install it by running `dotnet tool restore` once per clone. You may then apply the formatting rules by running: `dotnet csharpier format .`. Please ensure this is ran before your PR is created to make merges easier. A workflow will fail if formatting changes are required.
-
-
-#### Format On Save
-
-There are Plugins for both [VS](https://marketplace.visualstudio.com/items?itemName=csharpier.csharpier-vscode) and [Rider](https://plugins.jetbrains.com/plugin/18243-csharpier) which allow you to automatically format project code when a file is saved.
-
-In Rider, after installing the CSharpier plugin:
-- Open `Settings`
-- Browse to `Editor`, `Code Style`:
-    - Set scheme to `Project`
-    - Check `Enable EditorConfig Support`
-- Browse to `Tools`, `CSharpier`:
-    - Enable "Run On Save"
-- Browse to `Tools`, `Actions on save`:
-    - Check `Reformat and Cleanup Code`
-    - Set to `Reformat & Apply Syntax Style`, `Changed lines`
-
-### Tests
-
-We have a number of tests that are run automatically when you submit a pull request. You can run these tests locally by running The unit test sub-project. If you're adding a new feature or fixing a bug, please consider adding tests to cover your changes so that we can ensure they don't break in the future.
-
-
-## License
-
-This project is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License. See the [LICENSE](LICENSE) file for details.
+Original SPT/Tushonka authors retain credit for upstream work. Consult the repository's existing license files for terms.
