@@ -33,20 +33,6 @@ The service publishes relative paths, names, file versions, lengths and SHA-256 
 
 Core SPT profile, mod, bundle, webserver and gameplay endpoints remain in place. Fika multiplayer functionality is maintained separately in [IGSApex/Fika-Server-CSharp](https://github.com/IGSApex/Fika-Server-CSharp).
 
-## Setup and build
-
-Requirements: .NET 10 SDK, Visual Studio or Rider, Git LFS for any tracked large dependencies. Clone this fork, not the upstream repository:
-
-```powershell
-git clone https://github.com/IGSApex/server-csharp.git
-cd server-csharp
-git lfs pull
-dotnet restore
-dotnet build -c Release
-```
-
-Open the solution in your IDE if preferred. Deploy the built server files according to the project's publish configuration and retain `SPT_Runtime` data when upgrading. Restart the server after deploying updated binaries. Do not overwrite persistent profiles or accounts without backups.
-
 ## Diagnosing Mod Manager
 
 1. Open `http://SERVER:PORT/launcher/v2/client-mods` from an authorized test machine.
