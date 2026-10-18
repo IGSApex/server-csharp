@@ -9,7 +9,7 @@ namespace SPTarkov.Server.Core.Controllers;
 /// <summary>
 /// Separate launcher identities. Existing EFT profile files are deliberately not imported.
 /// The JSON account record is persisted under user/profiles/launcher/{username}.json.
-/// Session tokens are held only in memory and expire when the server restarts.
+/// Remembered session tokens are stored as SHA-256 hashes on disk and expire after 30 days.
 /// </summary>
 [Injectable]
 public class LauncherAccountStore
@@ -19,12 +19,15 @@ public class LauncherAccountStore
     // validate against the same live server session registry.
     private static readonly ConcurrentDictionary<string, LauncherSession> _sessions = new();
     private readonly string _directory;
+    private readonly string _sessionsFile;
+    private static readonly object SessionFileLock = new();
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
     public LauncherAccountStore()
     {
         _directory = Path.Combine(AppContext.BaseDirectory, "user", "profiles", "launcher");
         Directory.CreateDirectory(_directory);
+        _sessionsFile = Path.Combine(_directory, "sessions.json");
     }
 
     private static bool ValidUsername(string? username) =>
@@ -80,17 +83,26 @@ public class LauncherAccountStore
             var account = Read(username!);
             if (account is null || !Passwords.Verify(account.Password, password)) return null;
             var token = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
-            _sessions[token] = new LauncherSession(account.Username, DateTimeOffset.UtcNow.AddHours(12));
+            var session = new LauncherSession(account.Username, DateTimeOffset.UtcNow.AddDays(30));
+            _sessions[token] = session;
+            SaveSession(token, session);
             return new LauncherAuthentication(token, account.Username, account.EditionAllowed, [.. account.SavedProfiles]);
         }
     }
 
     public LauncherAuthentication? Authenticate(string? token)
     {
-        if (string.IsNullOrWhiteSpace(token) || !_sessions.TryGetValue(token, out var session)) return null;
+        if (string.IsNullOrWhiteSpace(token)) return null;
+        if (!_sessions.TryGetValue(token, out var session))
+        {
+            session = LoadSession(token);
+            if (session is null) return null;
+            _sessions[token] = session;
+        }
         if (session.ExpiresAt <= DateTimeOffset.UtcNow)
         {
             _sessions.TryRemove(token, out _);
+            RemoveSession(token);
             return null;
         }
         lock (_sync)
@@ -134,8 +146,56 @@ public class LauncherAccountStore
 
     public void Logout(string? token)
     {
-        if (token is not null) _sessions.TryRemove(token, out _);
+        if (token is not null)
+        {
+            _sessions.TryRemove(token, out _);
+            RemoveSession(token);
+        }
     }
+
+    private static string TokenKey(string token) =>
+        Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token)));
+
+    private Dictionary<string, LauncherSession> ReadSessions()
+    {
+        if (!File.Exists(_sessionsFile)) return [];
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, LauncherSession>>(
+                File.ReadAllText(_sessionsFile), JsonOptions) ?? [];
+        }
+        catch (JsonException) { return []; }
+    }
+
+    private void UpdateSessions(Action<Dictionary<string, LauncherSession>> update)
+    {
+        lock (SessionFileLock)
+        {
+            var sessions = ReadSessions();
+            update(sessions);
+            var temp = _sessionsFile + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            try
+            {
+                File.WriteAllText(temp, JsonSerializer.Serialize(sessions, JsonOptions));
+                File.Move(temp, _sessionsFile, true);
+            }
+            finally { if (File.Exists(temp)) File.Delete(temp); }
+        }
+    }
+
+    private void SaveSession(string token, LauncherSession session) =>
+        UpdateSessions(sessions => sessions[TokenKey(token)] = session);
+
+    private LauncherSession? LoadSession(string token)
+    {
+        lock (SessionFileLock)
+        {
+            return ReadSessions().TryGetValue(TokenKey(token), out var session) ? session : null;
+        }
+    }
+
+    private void RemoveSession(string token) =>
+        UpdateSessions(sessions => sessions.Remove(TokenKey(token)));
 
     private sealed record LauncherSession(string Username, DateTimeOffset ExpiresAt);
 }
