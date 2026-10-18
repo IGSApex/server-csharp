@@ -4,6 +4,7 @@ using SPTarkov.Server.Core.Controllers;
 using SPTarkov.Server.Core.Models.Eft.Launcher;
 using SPTarkov.Server.Core.Models.Spt.Launcher;
 using SPTarkov.Server.Core.Utils;
+using SPTarkov.Server.Core.Services.Server;
 
 namespace SPTarkov.Server.Core.Callbacks;
 
@@ -13,6 +14,7 @@ public class LauncherV2Callbacks(
     LauncherV2Controller launcherV2Controller,
     ProfileController profileController,
     LauncherAccountStore launcherAccounts,
+    ClientModDistributionService clientMods,
     ILogger<LauncherV2Callbacks> logger
 )
 {
@@ -113,6 +115,8 @@ public class LauncherV2Callbacks(
             httpResponseUtil.NoBody(new LauncherV2VersionResponse { Response = launcherV2Controller.SptVersion() })
         );
     }
+
+    public ValueTask<string> ClientMods() => new(httpResponseUtil.NoBody(clientMods.GetManifest()));
 
     public ValueTask<string> Mods()
     {
