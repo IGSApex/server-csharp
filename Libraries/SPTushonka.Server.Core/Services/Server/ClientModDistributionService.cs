@@ -15,7 +15,24 @@ public sealed class ClientModManifestEntry
 [Injectable(InjectionType.Singleton)]
 public class ClientModDistributionService
 {
-    private string Root => Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "BepInEx"));
+    // The server executable commonly runs from SPT_Runtime while BepInEx is one level above.
+    private string Root
+    {
+        get
+        {
+            var candidates = new[]
+            {
+                Path.Combine(Directory.GetCurrentDirectory(), "BepInEx"),
+                Path.Combine(Directory.GetCurrentDirectory(), "..", "BepInEx"),
+                Path.Combine(AppContext.BaseDirectory, "BepInEx"),
+                Path.Combine(AppContext.BaseDirectory, "..", "BepInEx")
+            };
+            return candidates.Select(Path.GetFullPath)
+                .FirstOrDefault(path => Directory.Exists(Path.Combine(path, "plugins")) ||
+                                        Directory.Exists(Path.Combine(path, "patchers")))
+                ?? Path.GetFullPath(candidates[0]);
+        }
+    }
 
     private static bool IsBuiltIn(string relative)
     {
