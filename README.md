@@ -1,6 +1,6 @@
-# IGS Gaming Community — SPT Server
+# SPT Server
 
-Community fork of the [SP-Tushonka C# server](https://github.com/SP-Tushonka/server-csharp), used with the [IGS launcher](https://github.com/IGSApex/launcher) and Fika components. The current development target is SPT 4.1.6.
+Community fork of the [SP-Tushonka C# server](https://github.com/SP-Tushonka/server-csharp), used with the [custom launcher](https://github.com/IGSApex/launcher) and Fika components. The current development target is SPT 4.1.6.
 
 ## Community additions
 
