@@ -1,49 +1,21 @@
 # SPT Server
 
-Community fork of the [SP-Tushonka C# server](https://github.com/SP-Tushonka/server-csharp), used with the [custom launcher](https://github.com/IGSApex/launcher) and Fika components. The current development target is SPT 4.1.6.
+SPT game server with launcher account support and client mod distribution.
 
-## Community additions
+## Features
 
-### Launcher account system
+- **Launcher accounts:** Servers can require users to register or log in before accessing their game profiles.
+- **Account profiles:** Game profiles are associated with launcher accounts and managed through the launcher.
+- **Remembered sessions:** The server validates saved launcher sessions for returning users.
+- **Client mod manifest:** The server lists client mods from its `BepInEx/plugins` and `BepInEx/patchers` directories, including subfolders.
+- **Client mod downloads:** The launcher can retrieve the server's client mod files and match them against the player's installation.
 
-The launcher can probe `/launcher/v2/launcher-account-required` to determine whether server-specific account authentication is enabled. Account endpoints under `/launcher/v2/account/` support registration, login, session checks and account-associated profiles. The server remains authoritative for authentication and profile ownership; existing game profiles on disk should not be deleted during migration.
+## How to Use
 
-`LauncherAccountStore` manages the account/session data. Session tokens are random bearer credentials; the current implementation persists **hashes** of tokens in `sessions.json` and applies a 30-day expiration. Clients should protect their saved tokens and should not treat a remembered login as permanent authorization.
+Place the client mods you want players to use in the server's `BepInEx/plugins` or `BepInEx/patchers` directories. Players can open **Mod Manager** in the launcher, select **Refresh**, and use **Update Mods to Match Server** to synchronize their client mods.
 
-### Client mod manifest and downloads
+Standard SPT modules are excluded from the optional mod list.
 
-`ClientModDistributionService` discovers the server's `BepInEx` directory relative to the working directory or executable directory, including the parent of `SPT_Runtime`. It recursively enumerates:
+## Related Projects
 
-```text
-SPT_Server/
-├── BepInEx/
-│   ├── plugins/
-│   │   ├── Fika/Fika.Core.dll
-│   │   └── WTT-ArmoryClient/...
-│   └── patchers/
-│       └── WTT-ContentBackportPatcher/...
-└── SPT_Runtime/
-```
-
-The service publishes relative paths, names, file versions, lengths and SHA-256 hashes through `GET /launcher/v2/client-mods`. The launcher requests file contents using `/files/client-mod/{relative-path}`. Paths are checked to prevent traversal outside the BepInEx root. Standard `plugins/spt/`, `patchers/spt-prepatch.dll`, and `patchers/FixPluginTypesSerialization.dll` are excluded.
-
-**Important:** This scans actual files, not a curated mod registry. Non-DLL files in eligible folders may appear as entries. Keep only files you intend to distribute in these directories; review licensing and secrets before making a server accessible. This is not a package manager or cryptographic signature system. A client trusting this endpoint may execute the distributed DLLs.
-
-### Other functionality
-
-Core SPT profile, mod, bundle, webserver and gameplay endpoints remain in place. Fika multiplayer functionality is maintained separately in [IGSApex/Fika-Server-CSharp](https://github.com/IGSApex/Fika-Server-CSharp).
-
-## Diagnosing Mod Manager
-
-1. Open `http://SERVER:PORT/launcher/v2/client-mods` from an authorized test machine.
-2. Confirm the JSON array contains expected `plugins/...` and `patchers/...` paths, sizes and hashes.
-3. If empty, verify the server process's working directory and that `BepInEx` is beside `SPT_Runtime` (or otherwise discoverable).
-4. Test one download and verify its hash before rolling out to players.
-
-The manifest and file-transfer features have not been fully end-to-end validated. Test on a nonproduction installation.
-
-## Related projects
-
-[Launcher](https://github.com/IGSApex/launcher) · [Fika client](https://github.com/IGSApex/Fika-Plugin) · [Fika server](https://github.com/IGSApex/Fika-Server-CSharp)
-
-Original SPT/Tushonka authors retain credit for upstream work. Consult the repository's existing license files for terms.
+[Launcher](https://github.com/IGSApex/launcher) · [Modules](https://github.com/IGSApex/modules) · [Fika Client](https://github.com/IGSApex/Fika-Plugin) · [Fika Server](https://github.com/IGSApex/Fika-Server-CSharp)
