@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI;
 using SPTarkov.DI.Annotations;
@@ -72,6 +73,7 @@ public sealed class SPTStartupHostedService(
     {
         try
         {
+            _ = new ServerBrowserHeartbeatHostedService(serviceProvider.GetRequiredService<ILogger<ServerBrowserHeartbeatHostedService>>()).RunAsync(cancellationToken);
             using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
 
             while (!cancellationToken.IsCancellationRequested)
