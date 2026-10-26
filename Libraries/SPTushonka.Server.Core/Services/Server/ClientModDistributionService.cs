@@ -57,7 +57,25 @@ public class ClientModDistributionService
         }
     }
 
+    private readonly object _manifestLock = new();
+    private List<ClientModManifestEntry>? _manifestCache;
+    private DateTime _cacheExpiresUtc = DateTime.MinValue;
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(2);
+
     public List<ClientModManifestEntry> GetManifest()
+    {
+        lock (_manifestLock)
+        {
+            if (_manifestCache != null && DateTime.UtcNow < _cacheExpiresUtc)
+                return _manifestCache;
+            var manifest = BuildManifest();
+            _manifestCache = manifest;
+            _cacheExpiresUtc = DateTime.UtcNow + CacheDuration;
+            return manifest;
+        }
+    }
+
+    private List<ClientModManifestEntry> BuildManifest()
     {
         if (!Directory.Exists(Root)) return [];
         return EnumerateClientFiles().Select(path =>
