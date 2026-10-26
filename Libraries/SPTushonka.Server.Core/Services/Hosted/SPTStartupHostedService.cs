@@ -73,7 +73,8 @@ public sealed class SPTStartupHostedService(
     {
         try
         {
-            _ = new ServerBrowserHeartbeatHostedService(serviceProvider.GetRequiredService<ILogger<ServerBrowserHeartbeatHostedService>>()).RunAsync(cancellationToken);
+            var browserHeartbeat = new ServerBrowserHeartbeatHostedService(serviceProvider.GetRequiredService<ILogger<ServerBrowserHeartbeatHostedService>>());
+            await browserHeartbeat.StartAsync(cancellationToken);
             using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
 
             while (!cancellationToken.IsCancellationRequested)
