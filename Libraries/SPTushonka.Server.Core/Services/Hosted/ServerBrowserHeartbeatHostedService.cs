@@ -13,25 +13,7 @@ public sealed class ServerBrowserHeartbeatHostedService(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var master = Environment.GetEnvironmentVariable("SPT_BROWSER_URL");
-        var key = Environment.GetEnvironmentVariable("SPT_BROWSER_SERVER_TOKEN");
-        if (string.IsNullOrWhiteSpace(master) || string.IsNullOrWhiteSpace(key))
-        {
-            logger.LogInformation("Server browser disabled: configure SPT_BROWSER_URL and a per-server SPT_BROWSER_SERVER_TOKEN.");
-            return;
-        }
-
-        var endpoint = master.TrimEnd('/');
-        var id = Environment.GetEnvironmentVariable("SPT_BROWSER_SERVER_ID");
-        if (string.IsNullOrWhiteSpace(id))
-        {
-            var idFile = Path.Combine("user", "server-browser-id.txt");
-            Directory.CreateDirectory("user");
-            if (!File.Exists(idFile))
-                File.WriteAllText(idFile, Guid.NewGuid().ToString("N"));
-            id = File.ReadAllText(idFile).Trim();
-        }
-
+        const string endpoint = "http://136.62.131.89:8080";
         var registered = false;
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -48,12 +30,12 @@ public sealed class ServerBrowserHeartbeatHostedService(
                 var host = httpRoot.GetProperty("ip").GetString();
                 var port = httpRoot.GetProperty("port").GetInt32();
                 var address = Uri.TryCreate($"http://{host}:{port}", UriKind.Absolute, out var parsed) ? parsed.ToString().TrimEnd('/') : null;
+                var id = $"{host}:{port}";
                 if (!visible || string.IsNullOrWhiteSpace(address))
                 {
                     if (registered)
                     {
                         using var remove = new HttpRequestMessage(HttpMethod.Delete, endpoint + "/api/servers/" + Uri.EscapeDataString(id));
-                        remove.Headers.TryAddWithoutValidation("X-Server-Token", key);
                         using var response = await _http.SendAsync(remove, stoppingToken);
                         response.EnsureSuccessStatusCode();
                         registered = false;
@@ -73,7 +55,6 @@ public sealed class ServerBrowserHeartbeatHostedService(
                     {
                         Content = JsonContent.Create(payload)
                     };
-                    request.Headers.TryAddWithoutValidation("X-Registration-Key", key);
                     using var response = await _http.SendAsync(request, stoppingToken);
                     response.EnsureSuccessStatusCode();
                     registered = true;
