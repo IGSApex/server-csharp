@@ -45,9 +45,29 @@ public sealed class ServerBrowserHeartbeatHostedService(
                 {
                     // Player counts must come from a future live session tracker; never fabricate them.
                     var maxPlayers = features.TryGetProperty("maxPlayers", out var configuredMax) && configuredMax.TryGetInt32(out var max) && max > 0 ? max : 10;
-                    var clientModsRequired = File.Exists(Path.Combine(AppContext.BaseDirectory, "user", "cache", "client-mod-manifest.json")) &&
-                        new FileInfo(Path.Combine(AppContext.BaseDirectory, "user", "cache", "client-mod-manifest.json")).Length > 2 &&
-                        JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "user", "cache", "client-mod-manifest.json"))).RootElement.GetArrayLength() > 0;
+                    // Only custom DLLs count. Built-in BepInEx/plugins/spt and the SPT prepatcher are excluded.
+                    var bepinexRoots = new[]
+                    {
+                        Path.Combine(Directory.GetCurrentDirectory(), "BepInEx"),
+                        Path.Combine(Directory.GetCurrentDirectory(), "..", "BepInEx"),
+                        Path.Combine(AppContext.BaseDirectory, "BepInEx"),
+                        Path.Combine(AppContext.BaseDirectory, "..", "BepInEx")
+                    };
+                    var bepinex = bepinexRoots.Select(Path.GetFullPath)
+                        .FirstOrDefault(path => Directory.Exists(Path.Combine(path, "plugins")) ||
+                                                Directory.Exists(Path.Combine(path, "patchers")));
+                    var clientModsRequired = bepinex != null && new[] { "plugins", "patchers" }.Any(folder =>
+                    {
+                        var directory = Path.Combine(bepinex, folder);
+                        return Directory.Exists(directory) &&
+                            Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories)
+                                .Where(file => string.Equals(Path.GetExtension(file), ".dll", StringComparison.OrdinalIgnoreCase))
+                                .Select(file => Path.GetRelativePath(bepinex, file).Replace('\\', '/'))
+                                .Any(relative =>
+                                    !relative.StartsWith("plugins/spt/", StringComparison.OrdinalIgnoreCase) &&
+                                    !relative.Equals("patchers/spt-prepatch.dll", StringComparison.OrdinalIgnoreCase) &&
+                                    !relative.Equals("patchers/FixPluginTypesSerialization.dll", StringComparison.OrdinalIgnoreCase));
+                    });
                     var serverModsDetected = Directory.Exists(Path.Combine("user", "mods")) &&
                         Directory.EnumerateFiles(Path.Combine("user", "mods"), "*.dll", SearchOption.AllDirectories).Any();
                     var payload = new
