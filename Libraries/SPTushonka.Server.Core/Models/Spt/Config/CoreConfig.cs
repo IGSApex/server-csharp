@@ -198,6 +198,9 @@ public record GameFixes
 
 public record ServerFeatures
 {
+    [JsonPropertyName("showOnServerBrowser")]
+    public bool ShowOnServerBrowser { get; set; } = false;
+
     [JsonPropertyName("requireLauncherAccount")]
     public bool RequireLauncherAccount { get; set; } = false;
 
