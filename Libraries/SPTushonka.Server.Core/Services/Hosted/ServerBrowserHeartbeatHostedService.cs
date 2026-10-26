@@ -14,10 +14,10 @@ public sealed class ServerBrowserHeartbeatHostedService(
     public async Task RunAsync(CancellationToken stoppingToken)
     {
         var master = Environment.GetEnvironmentVariable("SPT_BROWSER_URL");
-        var key = Environment.GetEnvironmentVariable("SPT_BROWSER_KEY");
+        var key = Environment.GetEnvironmentVariable("SPT_BROWSER_SERVER_TOKEN");
         if (string.IsNullOrWhiteSpace(master) || string.IsNullOrWhiteSpace(key))
         {
-            logger.LogInformation("Server browser disabled: configure SPT_BROWSER_URL and SPT_BROWSER_KEY.");
+            logger.LogInformation("Server browser disabled: configure SPT_BROWSER_URL and a per-server SPT_BROWSER_SERVER_TOKEN.");
             return;
         }
 
@@ -43,13 +43,17 @@ public sealed class ServerBrowserHeartbeatHostedService(
                 var visible = features.TryGetProperty("showOnServerBrowser", out var flag) && flag.GetBoolean();
                 var name = root.GetProperty("serverName").GetString() ?? "SPT Server";
                 var accounts = features.TryGetProperty("requireLauncherAccount", out var required) && required.GetBoolean();
-                var address = Environment.GetEnvironmentVariable("SPT_BROWSER_PUBLIC_URL");
+                using var http = JsonDocument.Parse(File.ReadAllText(Path.Combine("SPT_Data", "configs", "http.json")));
+                var httpRoot = http.RootElement;
+                var host = httpRoot.GetProperty("ip").GetString();
+                var port = httpRoot.GetProperty("port").GetInt32();
+                var address = Uri.TryCreate($"http://{host}:{port}", UriKind.Absolute, out var parsed) ? parsed.ToString().TrimEnd('/') : null;
                 if (!visible || string.IsNullOrWhiteSpace(address))
                 {
                     if (registered)
                     {
                         using var remove = new HttpRequestMessage(HttpMethod.Delete, endpoint + "/api/servers/" + Uri.EscapeDataString(id));
-                        remove.Headers.TryAddWithoutValidation("X-Registration-Key", key);
+                        remove.Headers.TryAddWithoutValidation("X-Server-Token", key);
                         using var response = await _http.SendAsync(remove, stoppingToken);
                         response.EnsureSuccessStatusCode();
                         registered = false;
@@ -58,7 +62,7 @@ public sealed class ServerBrowserHeartbeatHostedService(
                 else
                 {
                     // Player counts must come from a future live session tracker; never fabricate them.
-                    var maxPlayers = int.TryParse(Environment.GetEnvironmentVariable("SPT_BROWSER_MAX_PLAYERS"), out var max) && max > 0 ? max : 10;
+                    var maxPlayers = features.TryGetProperty("maxPlayers", out var configuredMax) && configuredMax.TryGetInt32(out var max) && max > 0 ? max : 10;
                     var payload = new
                     {
                         id, name, address, currentPlayers = 0, maxPlayers,
