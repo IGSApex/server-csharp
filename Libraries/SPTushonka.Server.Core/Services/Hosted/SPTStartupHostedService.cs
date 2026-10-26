@@ -8,6 +8,7 @@ using SPTarkov.Server.Core.Loaders;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Services.Locales;
+using SPTarkov.Server.Core.Services.Server;
 using SPTarkov.Server.Core.Utils;
 
 namespace SPTarkov.Server.Core.Services.Hosted;
@@ -21,6 +22,7 @@ public sealed class SPTStartupHostedService(
     RandomUtil randomUtil,
     ServerLocalisationService serverLocalisationService,
     HttpServer httpServer,
+    ClientModDistributionService clientModDistributionService,
     ISptLogger<SPTStartupHostedService> logger,
     IServiceProvider serviceProvider,
     SystemInformationLogger systemInformationLogger,
@@ -54,6 +56,8 @@ public sealed class SPTStartupHostedService(
 
             await onLoad.OnLoadAsync(cancellationToken).ConfigureAwait(false);
         }
+
+        clientModDistributionService.RefreshManifestOnStartup();
 
         logger.Success(serverLocalisationService.GetText("started_webserver_success", httpServer.ListeningUrl()));
         logger.Success(serverLocalisationService.GetText("websocket-started", httpServer.ListeningUrl().Replace("https://", "wss://")));
