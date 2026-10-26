@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Security.Cryptography;
 using SPTarkov.DI.Annotations;
 
@@ -59,19 +60,31 @@ public class ClientModDistributionService
 
     private readonly object _manifestLock = new();
     private List<ClientModManifestEntry>? _manifestCache;
-    private DateTime _cacheExpiresUtc = DateTime.MinValue;
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(2);
+    private static string ManifestPath => Path.Combine(AppContext.BaseDirectory, "user", "cache", "client-mod-manifest.json");
+
+    public void RefreshManifestOnStartup()
+    {
+        lock (_manifestLock)
+        {
+            var manifest = BuildManifest();
+            var file = ManifestPath;
+            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+            var temporary = file + ".tmp";
+            File.WriteAllText(temporary, JsonSerializer.Serialize(manifest, new JsonSerializerOptions { WriteIndented = true }));
+            File.Move(temporary, file, true);
+            _manifestCache = manifest;
+        }
+    }
 
     public List<ClientModManifestEntry> GetManifest()
     {
         lock (_manifestLock)
         {
-            if (_manifestCache != null && DateTime.UtcNow < _cacheExpiresUtc)
-                return _manifestCache;
-            var manifest = BuildManifest();
-            _manifestCache = manifest;
-            _cacheExpiresUtc = DateTime.UtcNow + CacheDuration;
-            return manifest;
+            // Never scan or hash mods on an HTTP request.
+            if (_manifestCache != null) return _manifestCache;
+            if (!File.Exists(ManifestPath)) return [];
+            _manifestCache = JsonSerializer.Deserialize<List<ClientModManifestEntry>>(File.ReadAllText(ManifestPath)) ?? [];
+            return _manifestCache;
         }
     }
 
