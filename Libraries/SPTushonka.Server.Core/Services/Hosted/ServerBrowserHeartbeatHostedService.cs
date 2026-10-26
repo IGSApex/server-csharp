@@ -11,7 +11,7 @@ public sealed class ServerBrowserHeartbeatHostedService(
 {
     private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(10) };
 
-    public async Task RunAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var master = Environment.GetEnvironmentVariable("SPT_BROWSER_URL");
         var key = Environment.GetEnvironmentVariable("SPT_BROWSER_SERVER_TOKEN");
