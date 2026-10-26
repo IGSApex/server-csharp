@@ -201,6 +201,9 @@ public record ServerFeatures
     [JsonPropertyName("showOnServerBrowser")]
     public bool ShowOnServerBrowser { get; set; } = false;
 
+    [JsonPropertyName("maxPlayers")]
+    public int MaxPlayers { get; set; } = 10;
+
     [JsonPropertyName("requireLauncherAccount")]
     public bool RequireLauncherAccount { get; set; } = false;
 
