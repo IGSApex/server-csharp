@@ -45,10 +45,16 @@ public sealed class ServerBrowserHeartbeatHostedService(
                 {
                     // Player counts must come from a future live session tracker; never fabricate them.
                     var maxPlayers = features.TryGetProperty("maxPlayers", out var configuredMax) && configuredMax.TryGetInt32(out var max) && max > 0 ? max : 10;
+                    var clientModsRequired = File.Exists(Path.Combine(AppContext.BaseDirectory, "user", "cache", "client-mod-manifest.json")) &&
+                        new FileInfo(Path.Combine(AppContext.BaseDirectory, "user", "cache", "client-mod-manifest.json")).Length > 2 &&
+                        JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "user", "cache", "client-mod-manifest.json"))).RootElement.GetArrayLength() > 0;
+                    var serverModsDetected = Directory.Exists(Path.Combine("user", "mods")) &&
+                        Directory.EnumerateFiles(Path.Combine("user", "mods"), "*.dll", SearchOption.AllDirectories).Any();
                     var payload = new
                     {
                         id, name, address, currentPlayers = 0, maxPlayers,
-                        requireLauncherAccount = accounts, showOnServerBrowser = true
+                        requireLauncherAccount = accounts, showOnServerBrowser = true,
+                        clientModsRequired, serverModsDetected
                     };
                     using var request = new HttpRequestMessage(HttpMethod.Post,
                         endpoint + (registered ? "/api/servers/heartbeat" : "/api/servers/register"))
