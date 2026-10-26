@@ -297,6 +297,7 @@
   },
   "features": {
     "showOnServerBrowser": false,
+    "maxPlayers": 10,
     "requireLauncherAccount": true,
     "compressProfile": true,
     "chatbotFeatures": {
